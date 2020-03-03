@@ -24,6 +24,9 @@ Eg. 'acidns -e 549690747' """)
 
 parser.add_argument("-d", "--disable", help="""Disable a sub-domain in ACI.PUB
 Eg. 'acidns -d 549690747' """)
+parser.add_argument("-m", "--modify", nargs="*",
+                    help="""Modify a sub-domain in ACI.PUB
+Eg. 'acidns -m 549690747 test A 2.2.2.2' """)
 
 args = parser.parse_args()
 
@@ -95,6 +98,22 @@ class dnsAgent(object):
         # print(getURL)
         return(rJson)
 
+    def modDns(self, recordId, subDomain, recordType, value):
+        originalDic = {"Action": "RecordModify",
+                       "subDomain": subDomain,
+                       "recordId": recordId,
+                       "domain": self.domainName,
+                       "recordType": recordType,
+                       "recordLine": "默认",
+                       "value": value,
+                       "Timestamp": self.Timestamp,
+                       "Nonce": self.Nonce}
+        rJson = self.takeAction(originalDic=originalDic)
+        if rJson["code"] == 0:
+            print(rJson["codeDesc"])
+        else:
+            print(rJson["codeDesc"]+": " + rJson["message"])
+
     def addDns(self, subDomain, recordType, value):
         if recordType.upper() in ["A", "CNAME", "MX", "TXT", "NS", "AAAA", "SRV"]:
             originalDic = {"Action": "RecordCreate",
@@ -165,6 +184,12 @@ if __name__ == "__main__":
     elif args.remove != None:
         recordId = args.remove
         myobj.removeDns(recordId=recordId)
+    elif args.modify != None:
+        recordId = args.modify[0]
+        subDomain = args.modify[1]
+        recordType = args.modify[2]
+        value = args.modify[3]
+        myobj.modDns(recordId=recordId,subDomain=subDomain, recordType=recordType, value=value)
     elif args.enable != None:
         recordId = args.enable
         myobj.enableDns(recordId=recordId)
